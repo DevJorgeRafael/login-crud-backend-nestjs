@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { User } from 'src/users/user.entity';
+import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +24,7 @@ export class AuthService {
     async login(username: string, password: string) {
         const user = await this.validateUser(username, password);
         if (!user) {
-            throw new Error('Invalid credentials');
+            throw new UnauthorizedException('Invalid credentials')
         }
         const payload = { username: user.username, sub: user.id };
         return {
@@ -32,6 +33,11 @@ export class AuthService {
     }
 
     async register(user: User) {
+        const userFound = await this.usersService.findOne(user.username);
+        if (userFound) {
+            return new ConflictException('Username already exists');
+        }
+
         const hashedPassword = bcrypt.hashSync(user.password, 10);
         user.password = hashedPassword;
         return this.usersService.create(user);
