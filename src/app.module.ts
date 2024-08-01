@@ -24,6 +24,9 @@ import { TasksModule } from './tasks/tasks.module';
         database: configService.get<string>('DB_DATABASE'),
         entities: [path.join(__dirname, '**/*.entity{.ts,.js}')],
         synchronize: true,
+        ssl: {
+          rejectUnauthorized: false,
+        }
       }),
       inject: [ConfigService],
     }),
